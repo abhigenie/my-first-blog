@@ -1,0 +1,95 @@
+Pre-requisites:
+anaconda 3.4
+sudo apt-get install python-virtualenv
+sudo apt-get install git
+________________________________________________________________________________
+Setup:
+mkdir djangogirls
+cd djangogirls
+virtualenv --python=python3.4 myvenv
+source myvenv/bin/activate
+pip install django==1.8
+_______________________________________________________________________________
+Django Start:
+django-admin startproject mysite .
+
+We'll also need to add a path for static files
+Go down to the end of the file, and just underneath the STATIC_URL entry, add a new one called
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+To create a database for our blog, let's run the following in the console:
+python manage.py migrate
+
+A model in Django is a special kind of object - it is saved in the database
+
+Creating an application
+python manage.py startapp blog
+After creating an application we also need to tell Django that it should use it. We do that in the file mysite/settings.py. We need to find INSTALLED_APPS and add a line containing 'blog', just above ). So the final product should look like this:
+
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'blog',
+)
+_______________________________________________________________________________
+Django models:
+
+Creating a blog post model
+
+In the blog/models.py file we define all objects called Models - this is a place in which we will define our blog post.
+
+Let's open blog/models.py, remove everything from it and write code like this:
+
+from django.db import models
+from django.utils import timezone
+
+
+class Post(models.Model):
+    author = models.ForeignKey('auth.User')
+    title = models.CharField(max_length=200)
+    text = models.TextField()
+    created_date = models.DateTimeField(
+            default=timezone.now)
+    published_date = models.DateTimeField(
+            blank=True, null=True)
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return self.title
+
+Create tables for models in your database
+
+The last step here is to add our new model to our database.
+First we have to make Django know that we have some changes in our model
+(we have just created it!). Type
+python manage.py makemigrations blog
+
+Django prepared for us a migration file that we have to apply now to our database.
+Type
+python manage.py migrate blog
+_______________________________________________________________________________
+Django admin:
+
+To add, edit and delete posts we've just modeled, we will use Django admin.
+Let's open the blog/admin.py file and replace its content with this:
+
+from django.contrib import admin
+from .models import Post
+
+admin.site.register(Post)
+
+To log in, you need to create a superuser - a user which has control over everything on the site.
+(myvenv) ~/djangogirls$ python manage.py createsuperuser
+Username: admin
+Email address: admin@admin.com
+Password:
+Password (again):
+Superuser created successfully.
